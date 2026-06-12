@@ -11,13 +11,16 @@ Tabla principal: analisis_historico
 """
 
 import json
+import os
 import sqlite3
 import pandas as pd
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-DB_PATH = Path("/app/db.sqlite")  # montado por Docker Compose
+# En Docker usa /app/db.sqlite (montado por Compose).
+# En local usa ./db.sqlite en el directorio de trabajo.
+DB_PATH = Path(os.getenv("DB_PATH", "/app/db.sqlite"))
 
 
 def get_connection() -> sqlite3.Connection:

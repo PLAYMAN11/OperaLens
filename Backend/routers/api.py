@@ -1,25 +1,59 @@
-# api.py — Oliver
+# api.py — Oliver + Emmanuel (integración)
 
-from fastapi import APIRouter
-from fastapi import UploadFile
-from fastapi import File
+from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from services.parser import parse_excel
 from services.normalizer import normalizar
+from services import analyzer, anomalies, history
 
 router = APIRouter()
 
-#Endpoint
+
 @router.post("/upload")
-async def upload_excel(
-    file: UploadFile = File(...)
-):
+async def upload_excel(file: UploadFile = File(...)):
+    # --- Capa 1: parsear y normalizar ---
+    try:
+        df = parse_excel(file.file)
+        df = normalizar(df)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
 
-    df = parse_excel(file.file)
+    # --- Capa 2: analizar y detectar anomalías ---
+    resultado = analyzer.analizar(df)
 
-    df = normalizar(df)
+    df_historico = history.obtener_movimientos_historicos()
+    alertas = anomalies.detectar(resultado, df_historico)
+
+    # --- Persistencia ---
+    analisis_id = history.guardar_analisis(resultado, alertas)
+    history.guardar_movimientos(df)
 
     return {
-        "columnas": list(df.columns),
-        "registros": len(df)
+        "analisis_id": analisis_id,
+        "registros": len(df),
+        "periodo": resultado["periodo"],
+        "inventario_valorizado": resultado["inventario_valorizado"],
+        "capital_inmovilizado": resultado["capital_inmovilizado"],
+        "perdidas_operativas": resultado["perdidas_operativas"],
+        "consumo": resultado["consumo"],
+        "resumen_etapas": resultado["resumen_etapas"],
+        "anomalias": alertas,
     }
+
+
+@router.get("/historial")
+def get_historial(limite: int = 10):
+    return history.obtener_historial(limite)
+
+
+@router.get("/historial/{analisis_id}")
+def get_analisis(analisis_id: int):
+    data = history.obtener_analisis_por_id(analisis_id)
+    if not data:
+        raise HTTPException(status_code=404, detail="Análisis no encontrado")
+    return data
+
+
+@router.get("/tendencia")
+def get_tendencia(ultimos: int = 6):
+    return history.tendencia_perdidas(ultimos)
