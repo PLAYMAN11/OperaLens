@@ -2,16 +2,21 @@
 
 Plataforma SaaS de Inteligencia Operacional impulsada por IA. SPA desktop-first construida con React.
 
-## Stack
+## Stack técnico
 
-- **Build:** Vite + React 19 + TypeScript
-- **Routing:** React Router v7
-- **Estilos:** Tailwind CSS v4 + tokens CSS de marca (`src/design-system/tokens.css`)
-- **Gráficos:** Recharts
-- **Estado servidor:** TanStack Query (mocks con latencia simulada)
-- **Estado UI:** Zustand
-- **Iconos:** Lucide React
-- **Tipografía:** Inter (Google Fonts)
+| Capa | Elección | Motivo |
+|------|----------|--------|
+| Build | Vite | DX rápida, HMR, estándar en startups tipo Vercel/Linear |
+| Routing | React Router v7 | Rutas anidadas para shell + módulos |
+| Estilos | Tailwind CSS v4 + CSS variables | Tokens de marca, utilidades, glassmorphism |
+| Componentes base | Radix UI + shadcn/ui (customizado) | Accesibilidad + estética premium editable |
+| Gráficos | Recharts + Tremor (opcional para KPI cards) | Visualizaciones tipo Tableau/Datadog |
+| Estado servidor | TanStack Query | Cache, loading/error states, futura integración API |
+| Estado UI | Zustand (ligero) | Sidebar colapsada, org seleccionada, tema |
+| Iconos | Lucide React | Consistente con Linear/Notion |
+| Tipografía | Inter (Google Fonts) | Legibilidad en dashboards, jerarquía clara |
+| Formularios | React Hook Form + Zod | Configuración, constructor de reportes |
+| Fechas | date-fns | Timelines y reportes programados |
 
 ## Desarrollo
 
@@ -22,25 +27,48 @@ npm run dev
 
 La app corre en `http://localhost:5173`.
 
-## Estructura
+## Estructura de carpetas propuesta
 
 ```
-src/
-├── layouts/AppShell.tsx       # Sidebar negra + TopBar + Outlet
-├── routes/index.tsx           # 8 módulos + sub-rutas de Configuración
-├── pages/                     # dashboard, operations, analytics, alerts,
-│                              # reports, insights, integrations, settings
-├── components/
-│   ├── ui/                    # Primitivos: Button, Card, Badge, Table...
-│   ├── widgets/               # KpiCard, AiSummaryBanner, Recomendaciones IA...
-│   ├── charts/                # Recharts: área, línea, barras, sparkline
-│   ├── layout/                # Sidebar, TopBar, CommandPalette, CopilotPanel
-│   └── shared/                # PageHeader, EmptyState, StatusDot, loaders
-├── data/mocks/                # Datos demo por módulo
-├── hooks/                     # Hooks TanStack Query por módulo
-├── stores/                    # Zustand: usuario/organización y estado UI
-├── types/                     # Tipos de dominio (alineados con el backend)
-└── lib/api/client.ts          # Cliente HTTP stub → FastAPI
+Frontend/
+├── index.html
+├── package.json
+├── vite.config.ts
+├── tailwind.config.ts
+├── tsconfig.json
+├── src/
+│   ├── main.tsx
+│   ├── App.tsx
+│   ├── routes/
+│   │   └── index.tsx              # Definición de rutas
+│   ├── layouts/
+│   │   └── AppShell.tsx           # Sidebar + TopBar + Outlet
+│   ├── pages/
+│   │   ├── dashboard/
+│   │   ├── operations/
+│   │   ├── analytics/
+│   │   ├── alerts/
+│   │   ├── reports/
+│   │   ├── insights/
+│   │   ├── integrations/
+│   │   └── settings/
+│   ├── components/
+│   │   ├── layout/                # Sidebar, TopBar, OrgSwitcher
+│   │   ├── ui/                    # shadcn: Button, Card, Table, etc.
+│   │   ├── charts/                # LineChart, AreaChart, Gauge
+│   │   ├── widgets/               # KpiCard, AiInsightCard, AlertBadge
+│   │   └── shared/                # EmptyState, LoadingState, PageHeader
+│   ├── design-system/
+│   │   ├── tokens.css             # Variables CSS de marca
+│   │   └── typography.ts
+│   ├── lib/
+│   │   ├── utils.ts               # cn(), formatters
+│   │   └── api/                   # Cliente HTTP (stub → FastAPI)
+│   ├── hooks/
+│   ├── stores/                    # Zustand: uiStore, orgStore
+│   ├── types/                     # Domain types alineados con Backend
+│   └── data/
+│       └── mocks/                 # Datos demo realistas por módulo
 ```
 
 ## Integración con el backend
