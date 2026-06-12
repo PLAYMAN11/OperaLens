@@ -6,7 +6,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./data/db.sqlite:/app/db.sqlite
+      - ./data:/app/data
     environment:
       - OLLAMA_HOST=http://host.docker.internal:11434
-      - DB_PATH=/app/db.sqlite
+      - DB_PATH=/app/data/db.sqlite
