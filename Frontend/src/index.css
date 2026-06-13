@@ -50,3 +50,60 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #a1a1aa;
 }
+
+/* Settings: text size */
+html[data-text-size='small'] {
+  font-size: 14px;
+}
+html[data-text-size='medium'] {
+  font-size: 16px;
+}
+html[data-text-size='large'] {
+  font-size: 18px;
+}
+
+/* Settings: interface density */
+html[data-density='compact'] .app-main {
+  padding: 1.25rem;
+}
+html[data-density='comfortable'] .app-main {
+  padding: 2rem;
+}
+html[data-density='spacious'] .app-main {
+  padding: 2.5rem;
+}
+
+/* Settings: dark theme (content area) */
+html.dark {
+  color-scheme: dark;
+}
+html.dark body {
+  background-color: #09090b;
+  color: #fafafa;
+}
+html.dark .bg-page {
+  background-color: #09090b;
+}
+
+/* Settings: high contrast */
+html[data-high-contrast='true'] body {
+  color: #000;
+}
+html[data-high-contrast='true'].dark body {
+  color: #fff;
+}
+
+/* Settings: reduce motion */
+html[data-reduce-motion='true'] *,
+html[data-reduce-motion='true'] *::before,
+html[data-reduce-motion='true'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Settings: focus visibility */
+html[data-focus-visible='true'] :focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}

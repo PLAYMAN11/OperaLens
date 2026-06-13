@@ -3,6 +3,7 @@ import { create } from 'zustand'
 interface Organization {
   id: string
   nombre: string
+  tipo: string
 }
 
 interface UserState {
@@ -15,14 +16,14 @@ interface UserState {
 }
 
 const organizaciones: Organization[] = [
-  { id: 'org-1', nombre: 'Manufactura Norte S.A.' },
-  { id: 'org-2', nombre: 'Planta Bajío' },
-  { id: 'org-3', nombre: 'Distribución Centro' },
+  { id: 'org-1', nombre: 'Manufactura Norte S.A.', tipo: 'Manufactura · PyME' },
+  { id: 'org-2', nombre: 'Planta Bajío', tipo: 'Producción · Regional' },
+  { id: 'org-3', nombre: 'Distribución Centro', tipo: 'Distribución · Nacional' },
 ]
 
 export const useUserStore = create<UserState>((set) => ({
   nombre: 'Juan Dávila',
-  rol: 'Gerente de Operaciones',
+  rol: 'Director General',
   iniciales: 'JD',
   organizaciones,
   orgActiva: organizaciones[0],

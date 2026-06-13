@@ -1,278 +1,484 @@
-import { useState } from 'react'
 import type { RouteObject } from 'react-router-dom'
-import { Plus, ShieldCheck } from 'lucide-react'
-import { Card, CardHeader } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
+import { useState } from 'react'
+import {
+  Accessibility,
+  Bell,
+  BookOpen,
+  ExternalLink,
+  Globe,
+  Info,
+  Monitor,
+  Shield,
+  Sparkles,
+  User,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Switch } from '@/components/ui/switch'
 import { Avatar } from '@/components/ui/avatar'
 import { Table, TBody, Td, Th, THead, Tr } from '@/components/ui/table'
-import { auditLog, orgUsers, roles } from '@/data/mocks/settings'
-import type { OrgUser } from '@/types'
+import { Badge } from '@/components/ui/badge'
+import {
+  OptionGroup,
+  SelectField,
+  SettingsCard,
+  ToggleRow,
+} from '@/components/settings/SettingsControls'
+import { useSettingsStore } from '@/stores/settingsStore'
+import { useUiStore } from '@/stores/uiStore'
+import { useUserStore } from '@/stores/userStore'
 
-const estadoUsuario: Record<OrgUser['estado'], { label: string; variant: 'success' | 'info' | 'neutral' }> = {
-  activo: { label: 'Activo', variant: 'success' },
-  invitado: { label: 'Invitado', variant: 'info' },
-  suspendido: { label: 'Suspendido', variant: 'neutral' },
-}
+function AppearanceSection() {
+  const { textSize, density, theme, set } = useSettingsStore()
 
-function UsersSection() {
   return (
-    <Card className="p-0">
-      <CardHeader
-        className="px-6 pt-6"
-        title="Usuarios"
-        subtitle="Miembros de la organización y su acceso"
-        actions={
-          <Button size="sm">
-            <Plus className="h-4 w-4" /> Invitar usuario
-          </Button>
-        }
+    <SettingsCard title="Apariencia" subtitle="Personaliza el tamaño, densidad y tema de la interfaz">
+      <OptionGroup
+        label="Tamaño de texto"
+        description="Ajusta la legibilidad del contenido"
+        value={textSize}
+        options={[
+          { value: 'small', label: 'Pequeño' },
+          { value: 'medium', label: 'Mediano' },
+          { value: 'large', label: 'Grande' },
+        ]}
+        onChange={(v) => set('textSize', v)}
       />
-      <Table>
-        <THead>
-          <Tr>
-            <Th>Usuario</Th>
-            <Th>Rol</Th>
-            <Th>Estado</Th>
-            <Th>Último acceso</Th>
-          </Tr>
-        </THead>
-        <TBody>
-          {orgUsers.map((user) => (
-            <Tr key={user.id}>
-              <Td>
-                <div className="flex items-center gap-3">
-                  <Avatar
-                    initials={user.nombre.split(' ').map((n) => n[0]).join('').slice(0, 2)}
-                    className="h-8 w-8 text-xs"
-                  />
-                  <div>
-                    <p className="font-semibold text-zinc-900">{user.nombre}</p>
-                    <p className="text-xs text-zinc-400">{user.email}</p>
-                  </div>
-                </div>
-              </Td>
-              <Td>{user.rol}</Td>
-              <Td>
-                <Badge variant={estadoUsuario[user.estado].variant}>
-                  {estadoUsuario[user.estado].label}
-                </Badge>
-              </Td>
-              <Td className="text-zinc-400">{user.ultimoAcceso}</Td>
-            </Tr>
-          ))}
-        </TBody>
-      </Table>
-    </Card>
+      <OptionGroup
+        label="Densidad de interfaz"
+        description="Espaciado entre elementos de la UI"
+        value={density}
+        options={[
+          { value: 'compact', label: 'Compacto' },
+          { value: 'comfortable', label: 'Cómodo' },
+          { value: 'spacious', label: 'Espacioso' },
+        ]}
+        onChange={(v) => set('density', v)}
+      />
+      <OptionGroup
+        label="Tema"
+        description="Modo claro u oscuro para el área de contenido"
+        value={theme}
+        options={[
+          { value: 'light', label: 'Claro' },
+          { value: 'dark', label: 'Oscuro' },
+        ]}
+        onChange={(v) => set('theme', v)}
+      />
+    </SettingsCard>
   )
 }
 
-function RolesSection() {
-  return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-      {roles.map((rol) => (
-        <Card key={rol.id}>
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-sm font-bold text-zinc-900">{rol.nombre}</h3>
-              <p className="text-xs text-zinc-400">{rol.usuarios} usuario(s)</p>
-            </div>
-            <ShieldCheck className="h-5 w-5 text-primary" />
-          </div>
-          <div className="mt-4 flex flex-wrap gap-1.5">
-            {rol.permisos.map((permiso) => (
-              <Badge key={permiso} variant="neutral">
-                {permiso}
-              </Badge>
-            ))}
-          </div>
-        </Card>
-      ))}
-    </div>
-  )
-}
+function AccessibilitySection() {
+  const { highContrast, reduceAnimations, keyboardNavigation, focusVisibility, set } =
+    useSettingsStore()
 
-function OrganizationSection() {
   return (
-    <Card>
-      <CardHeader title="Organización" subtitle="Datos generales de la cuenta" />
-      <div className="max-w-md space-y-4">
-        <div>
-          <label className="mb-1.5 block text-xs font-semibold text-zinc-500">
-            Nombre de la organización
-          </label>
-          <Input defaultValue="Manufactura Norte S.A." />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-xs font-semibold text-zinc-500">Industria</label>
-          <Input defaultValue="Manufactura — PyME" />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-xs font-semibold text-zinc-500">Zona horaria</label>
-          <Input defaultValue="América/Ciudad de México (UTC-6)" />
-        </div>
-        <Button>Guardar cambios</Button>
-      </div>
-    </Card>
-  )
-}
-
-function ToggleListSection({
-  title,
-  subtitle,
-  items,
-}: {
-  title: string
-  subtitle: string
-  items: { id: string; label: string; description: string; defaultOn: boolean }[]
-}) {
-  const [state, setState] = useState<Record<string, boolean>>(
-    Object.fromEntries(items.map((i) => [i.id, i.defaultOn])),
-  )
-  return (
-    <Card>
-      <CardHeader title={title} subtitle={subtitle} />
-      <div className="divide-y divide-zinc-50">
-        {items.map((item) => (
-          <div key={item.id} className="flex items-center justify-between gap-4 py-4">
-            <div>
-              <p className="text-sm font-semibold text-zinc-900">{item.label}</p>
-              <p className="text-xs text-zinc-500">{item.description}</p>
-            </div>
-            <Switch
-              checked={state[item.id]}
-              onChange={(v) => setState((s) => ({ ...s, [item.id]: v }))}
-              label={item.label}
-            />
-          </div>
-        ))}
-      </div>
-    </Card>
+    <SettingsCard title="Accesibilidad" subtitle="Opciones para mejorar la usabilidad y accesibilidad">
+      <ToggleRow
+        label="Modo de alto contraste"
+        description="Incrementa el contraste entre texto y fondo"
+        checked={highContrast}
+        onChange={(v) => set('highContrast', v)}
+      />
+      <ToggleRow
+        label="Reducir animaciones"
+        description="Minimiza transiciones y efectos de movimiento"
+        checked={reduceAnimations}
+        onChange={(v) => set('reduceAnimations', v)}
+      />
+      <ToggleRow
+        label="Navegación por teclado"
+        description="Atajos y navegación optimizada con teclado"
+        checked={keyboardNavigation}
+        onChange={(v) => set('keyboardNavigation', v)}
+      />
+      <ToggleRow
+        label="Visibilidad de foco"
+        description="Resalta claramente el elemento activo al navegar"
+        checked={focusVisibility}
+        onChange={(v) => set('focusVisibility', v)}
+      />
+    </SettingsCard>
   )
 }
 
 function NotificationsSection() {
+  const {
+    systemAlerts,
+    riskAlerts,
+    inventoryAlerts,
+    aiRecommendations,
+    emailNotifications,
+    set,
+  } = useSettingsStore()
+
   return (
-    <ToggleListSection
-      title="Preferencias de Notificaciones"
-      subtitle="Controla qué eventos generan alertas"
-      items={[
-        { id: 'n1', label: 'Incidentes críticos', description: 'Notificación inmediata por severidad alta', defaultOn: true },
-        { id: 'n2', label: 'Recomendaciones IA', description: 'Nuevos insights del motor de inteligencia', defaultOn: true },
-        { id: 'n3', label: 'Reportes programados', description: 'Confirmación de cada ejecución automática', defaultOn: false },
-        { id: 'n4', label: 'Errores de integración', description: 'Fallos de sincronización con sistemas externos', defaultOn: true },
-        { id: 'n5', label: 'Resumen diario', description: 'Digest matutino con el estado de la operación', defaultOn: true },
-      ]}
-    />
+    <SettingsCard title="Notificaciones" subtitle="Controla qué alertas e insights recibes">
+      <ToggleRow
+        label="Alertas del sistema"
+        description="Eventos generales de la plataforma"
+        checked={systemAlerts}
+        onChange={(v) => set('systemAlerts', v)}
+      />
+      <ToggleRow
+        label="Alertas de riesgo"
+        description="Anomalías y scores de riesgo operativo"
+        checked={riskAlerts}
+        onChange={(v) => set('riskAlerts', v)}
+      />
+      <ToggleRow
+        label="Alertas de inventario"
+        description="Stock crítico, rotación y capital inmovilizado"
+        checked={inventoryAlerts}
+        onChange={(v) => set('inventoryAlerts', v)}
+      />
+      <ToggleRow
+        label="Recomendaciones IA"
+        description="Insights y sugerencias del motor de inteligencia"
+        checked={aiRecommendations}
+        onChange={(v) => set('aiRecommendations', v)}
+      />
+      <ToggleRow
+        label="Notificaciones por email"
+        description="Resúmenes y alertas críticas por correo"
+        checked={emailNotifications}
+        onChange={(v) => set('emailNotifications', v)}
+      />
+    </SettingsCard>
   )
 }
 
-function AiSection() {
+function UserExperienceSection() {
+  const {
+    autoCollapseSidebar,
+    enableTooltips,
+    showOnboardingTips,
+    rememberNavigationState,
+    set,
+  } = useSettingsStore()
+  const setSidebarCollapsed = useUiStore((s) => s.setSidebarCollapsed)
+
+  return (
+    <SettingsCard title="Experiencia de usuario" subtitle="Preferencias de navegación e interacción">
+      <ToggleRow
+        label="Auto-contraer barra lateral"
+        description="Contrae el menú automáticamente en pantallas medianas"
+        checked={autoCollapseSidebar}
+        onChange={(v) => {
+          set('autoCollapseSidebar', v)
+          if (v) setSidebarCollapsed(true)
+        }}
+      />
+      <ToggleRow
+        label="Habilitar tooltips"
+        description="Muestra etiquetas al pasar el cursor con el menú contraído"
+        checked={enableTooltips}
+        onChange={(v) => set('enableTooltips', v)}
+      />
+      <ToggleRow
+        label="Mostrar tips de onboarding"
+        description="Sugerencias contextuales para nuevos usuarios"
+        checked={showOnboardingTips}
+        onChange={(v) => set('showOnboardingTips', v)}
+      />
+      <ToggleRow
+        label="Recordar estado de navegación"
+        description="Mantiene las secciones expandidas entre sesiones"
+        checked={rememberNavigationState}
+        onChange={(v) => set('rememberNavigationState', v)}
+      />
+    </SettingsCard>
+  )
+}
+
+function LanguageRegionSection() {
+  const { language, timeFormat, dateFormat, currencyFormat, set } = useSettingsStore()
+
+  return (
+    <SettingsCard title="Idioma y región" subtitle="Formatos regionales y preferencias de localización">
+      <SelectField
+        label="Idioma"
+        description="Idioma de la interfaz"
+        value={language}
+        options={[
+          { value: 'es', label: 'Español' },
+          { value: 'en', label: 'English' },
+          { value: 'pt', label: 'Português' },
+        ]}
+        onChange={(v) => set('language', v)}
+      />
+      <OptionGroup
+        label="Formato de hora"
+        value={timeFormat}
+        options={[
+          { value: '12h', label: '12 h' },
+          { value: '24h', label: '24 h' },
+        ]}
+        onChange={(v) => set('timeFormat', v)}
+      />
+      <SelectField
+        label="Formato de fecha"
+        value={dateFormat}
+        options={[
+          { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY' },
+          { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY' },
+          { value: 'YYYY-MM-DD', label: 'YYYY-MM-DD' },
+        ]}
+        onChange={(v) => set('dateFormat', v)}
+      />
+      <SelectField
+        label="Formato de moneda"
+        value={currencyFormat}
+        options={[
+          { value: 'MXN', label: 'MXN — Peso mexicano' },
+          { value: 'USD', label: 'USD — Dólar estadounidense' },
+          { value: 'EUR', label: 'EUR — Euro' },
+          { value: 'COP', label: 'COP — Peso colombiano' },
+        ]}
+        onChange={(v) => set('currencyFormat', v)}
+      />
+    </SettingsCard>
+  )
+}
+
+function AccountSection() {
+  const { nombre, rol, iniciales } = useUserStore()
+
   return (
     <div className="space-y-6">
-      <ToggleListSection
-        title="Configuración de IA"
-        subtitle="Comportamiento del motor de inteligencia operacional"
-        items={[
-          { id: 'ai1', label: 'Detección automática de anomalías', description: 'Análisis estadístico continuo (IQR + z-score)', defaultOn: true },
-          { id: 'ai2', label: 'Explicaciones en lenguaje natural', description: 'Resúmenes generados por el modelo local (Ollama + Mistral)', defaultOn: true },
-          { id: 'ai3', label: 'Predicciones de rendimiento', description: 'Forecast de eficiencia, costos y productividad', defaultOn: true },
-          { id: 'ai4', label: 'Recomendaciones proactivas', description: 'Sugerencias de optimización sin solicitud explícita', defaultOn: false },
-        ]}
-      />
-      <Card>
-        <CardHeader title="Umbrales de Detección" subtitle="Sensibilidad del detector de anomalías" />
-        <div className="grid max-w-md gap-4">
+      <SettingsCard title="Información de perfil" subtitle="Datos personales de tu cuenta">
+        <div className="flex items-center gap-4 py-4">
+          <Avatar initials={iniciales} className="h-14 w-14 text-base" />
           <div>
-            <label className="mb-1.5 block text-xs font-semibold text-zinc-500">
-              Desviación de consumo para alertar (%)
-            </label>
-            <Input type="number" defaultValue={20} />
+            <p className="font-semibold text-zinc-900 dark:text-zinc-100">{nombre}</p>
+            <p className="text-sm text-zinc-500">{rol}</p>
           </div>
-          <div>
-            <label className="mb-1.5 block text-xs font-semibold text-zinc-500">
-              Días sin rotación para stock inmovilizado
-            </label>
-            <Input type="number" defaultValue={30} />
-          </div>
-          <Button className="w-fit">Guardar umbrales</Button>
         </div>
-      </Card>
+        <div className="grid gap-4 py-4 md:grid-cols-2">
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-zinc-500">Nombre completo</label>
+            <Input defaultValue={nombre} />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-zinc-500">Correo electrónico</label>
+            <Input defaultValue="juan.davila@manufacturanorte.com" type="email" />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-zinc-500">Teléfono</label>
+            <Input defaultValue="+52 81 1234 5678" />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-zinc-500">Cargo</label>
+            <Input defaultValue={rol} />
+          </div>
+        </div>
+        <div className="pb-2">
+          <Button>Guardar perfil</Button>
+        </div>
+      </SettingsCard>
+
+      <SettingsCard title="Cambiar contraseña" subtitle="Actualiza tu credencial de acceso">
+        <div className="grid max-w-md gap-4 py-4">
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-zinc-500">Contraseña actual</label>
+            <Input type="password" />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-zinc-500">Nueva contraseña</label>
+            <Input type="password" />
+          </div>
+          <div>
+            <label className="mb-1.5 block text-xs font-semibold text-zinc-500">Confirmar contraseña</label>
+            <Input type="password" />
+          </div>
+          <Button className="w-fit">Actualizar contraseña</Button>
+        </div>
+      </SettingsCard>
+
+      <SettingsCard title="Gestión de sesiones" subtitle="Dispositivos con sesión activa">
+        <Table>
+          <THead>
+            <Tr>
+              <Th>Dispositivo</Th>
+              <Th>Ubicación</Th>
+              <Th>Última actividad</Th>
+              <Th>Estado</Th>
+            </Tr>
+          </THead>
+          <TBody>
+            <Tr>
+              <Td className="font-medium text-zinc-900 dark:text-zinc-100">Windows · Chrome</Td>
+              <Td>Monterrey, MX</Td>
+              <Td className="text-zinc-400">Activo ahora</Td>
+              <Td><Badge variant="success">Actual</Badge></Td>
+            </Tr>
+            <Tr>
+              <Td className="font-medium text-zinc-900 dark:text-zinc-100">iPhone · Safari</Td>
+              <Td>Monterrey, MX</Td>
+              <Td className="text-zinc-400">hace 2 días</Td>
+              <Td><Button variant="ghost" size="sm">Cerrar</Button></Td>
+            </Tr>
+          </TBody>
+        </Table>
+      </SettingsCard>
     </div>
   )
 }
 
+const loginHistory = [
+  { id: '1', fecha: '12 Jun 2026, 09:14', ip: '192.168.1.42', dispositivo: 'Windows · Chrome', estado: 'exitoso' },
+  { id: '2', fecha: '11 Jun 2026, 18:32', ip: '192.168.1.42', dispositivo: 'Windows · Chrome', estado: 'exitoso' },
+  { id: '3', fecha: '10 Jun 2026, 22:01', ip: '201.144.88.12', dispositivo: 'iPhone · Safari', estado: 'exitoso' },
+  { id: '4', fecha: '09 Jun 2026, 03:17', ip: '45.33.21.88', dispositivo: 'Desconocido', estado: 'bloqueado' },
+]
+
+const devices = [
+  { id: '1', nombre: 'Laptop corporativa', tipo: 'Windows 11', ultimo: 'Activo ahora', confiable: true },
+  { id: '2', nombre: 'iPhone 15 Pro', tipo: 'iOS 18', ultimo: 'hace 2 días', confiable: true },
+  { id: '3', nombre: 'Tablet almacén', tipo: 'Android 14', ultimo: 'hace 5 días', confiable: false },
+]
+
 function SecuritySection() {
-  return (
-    <ToggleListSection
-      title="Seguridad"
-      subtitle="Políticas de acceso y autenticación"
-      items={[
-        { id: 's1', label: 'Autenticación de dos factores (2FA)', description: 'Obligatoria para todos los miembros', defaultOn: true },
-        { id: 's2', label: 'Sesión única (SSO)', description: 'Inicio de sesión con proveedor corporativo', defaultOn: false },
-        { id: 's3', label: 'Expiración de sesión', description: 'Cerrar sesiones inactivas tras 8 horas', defaultOn: true },
-        { id: 's4', label: 'Restricción por IP', description: 'Solo permitir acceso desde redes autorizadas', defaultOn: false },
-      ]}
-    />
-  )
-}
+  const [twoFactor, setTwoFactor] = useState(true)
 
-function DataSection() {
   return (
-    <ToggleListSection
-      title="Gobernanza de Datos"
-      subtitle="Retención, privacidad y manejo de la información"
-      items={[
-        { id: 'd1', label: 'Retención de movimientos históricos', description: 'Conservar 24 meses de datos operativos', defaultOn: true },
-        { id: 'd2', label: 'Anonimización de datos personales', description: 'Enmascarar información sensible en reportes', defaultOn: true },
-        { id: 'd3', label: 'Exportación libre de datasets', description: 'Permitir a analistas exportar datos crudos', defaultOn: false },
-        { id: 'd4', label: 'Respaldo automático diario', description: 'Copia de seguridad de la base de análisis', defaultOn: true },
-      ]}
-    />
-  )
-}
+    <div className="space-y-6">
+      <SettingsCard title="Autenticación de dos factores" subtitle="Capa adicional de seguridad para tu cuenta">
+        <ToggleRow
+          label="Autenticación de dos factores (2FA)"
+          description="Requiere código de verificación al iniciar sesión"
+          checked={twoFactor}
+          onChange={setTwoFactor}
+        />
+        {twoFactor && (
+          <div className="rounded-xl bg-primary/5 px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">
+            2FA activo mediante aplicación autenticadora. Última verificación: hace 3 días.
+          </div>
+        )}
+      </SettingsCard>
 
-function AuditSection() {
-  return (
-    <Card className="p-0">
-      <CardHeader
-        className="px-6 pt-6"
-        title="Auditoría y Registros"
-        subtitle="Trazabilidad de acciones en la plataforma"
-      />
-      <Table>
-        <THead>
-          <Tr>
-            <Th>Usuario</Th>
-            <Th>Acción</Th>
-            <Th>Recurso</Th>
-            <Th>Fecha</Th>
-          </Tr>
-        </THead>
-        <TBody>
-          {auditLog.map((entry) => (
-            <Tr key={entry.id}>
-              <Td className="font-semibold text-zinc-900">{entry.usuario}</Td>
-              <Td>{entry.accion}</Td>
-              <Td className="text-zinc-500">{entry.recurso}</Td>
-              <Td className="text-zinc-400">{entry.fecha}</Td>
+      <SettingsCard title="Historial de inicio de sesión" subtitle="Registro de accesos recientes a tu cuenta">
+        <Table>
+          <THead>
+            <Tr>
+              <Th>Fecha</Th>
+              <Th>IP</Th>
+              <Th>Dispositivo</Th>
+              <Th>Estado</Th>
             </Tr>
+          </THead>
+          <TBody>
+            {loginHistory.map((entry) => (
+              <Tr key={entry.id}>
+                <Td>{entry.fecha}</Td>
+                <Td className="font-mono text-xs">{entry.ip}</Td>
+                <Td>{entry.dispositivo}</Td>
+                <Td>
+                  <Badge variant={entry.estado === 'exitoso' ? 'success' : 'danger'}>
+                    {entry.estado === 'exitoso' ? 'Exitoso' : 'Bloqueado'}
+                  </Badge>
+                </Td>
+              </Tr>
+            ))}
+          </TBody>
+        </Table>
+      </SettingsCard>
+
+      <SettingsCard title="Gestión de dispositivos" subtitle="Dispositivos autorizados para acceder a la plataforma">
+        <div className="divide-y divide-zinc-50 dark:divide-zinc-800">
+          {devices.map((device) => (
+            <div key={device.id} className="flex items-center justify-between gap-4 py-4">
+              <div>
+                <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{device.nombre}</p>
+                <p className="text-xs text-zinc-500">
+                  {device.tipo} · {device.ultimo}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {device.confiable ? (
+                  <Badge variant="success">Confiable</Badge>
+                ) : (
+                  <Badge variant="warning">Pendiente</Badge>
+                )}
+                <Button variant="ghost" size="sm">Revocar</Button>
+              </div>
+            </div>
           ))}
-        </TBody>
-      </Table>
-    </Card>
+        </div>
+      </SettingsCard>
+    </div>
+  )
+}
+
+function AboutSection() {
+  const links = [
+    { label: 'Notas de la versión', href: '#', icon: Sparkles },
+    { label: 'Documentación', href: '#', icon: BookOpen },
+    { label: 'Centro de soporte', href: '#', icon: ExternalLink },
+  ]
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-white to-secondary/5 p-8 shadow-card dark:from-primary/20 dark:via-zinc-900 dark:to-zinc-900">
+        <div className="flex items-center gap-4">
+          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary">
+            <Sparkles className="h-7 w-7 text-white" />
+          </span>
+          <div>
+            <h3 className="text-xl font-bold text-zinc-900 dark:text-white">OperaLens</h3>
+            <p className="text-sm text-zinc-500">Plataforma de inteligencia de inventario impulsada por IA</p>
+            <p className="mt-1 text-xs font-semibold text-primary">Versión 2.5.0 · Build 2026.06.12</p>
+          </div>
+        </div>
+      </div>
+
+      <SettingsCard title="Recursos" subtitle="Documentación, soporte y actualizaciones">
+        <div className="divide-y divide-zinc-50 dark:divide-zinc-800">
+          {links.map(({ label, href, icon: Icon }) => (
+            <a
+              key={label}
+              href={href}
+              className="flex items-center justify-between gap-4 py-4 transition-colors hover:text-primary"
+            >
+              <div className="flex items-center gap-3">
+                <Icon className="h-4 w-4 text-zinc-400" />
+                <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{label}</span>
+              </div>
+              <ExternalLink className="h-4 w-4 text-zinc-400" />
+            </a>
+          ))}
+        </div>
+      </SettingsCard>
+
+      <SettingsCard title="Información legal" subtitle="">
+        <p className="py-4 text-sm text-zinc-500">
+          © 2026 OperaLens. Todos los derechos reservados. Esta plataforma utiliza análisis
+          estadístico e inteligencia artificial para la detección de anomalías, riesgos operativos
+          y optimización de inventario.
+        </p>
+      </SettingsCard>
+    </div>
   )
 }
 
 export const settingsRoutes: RouteObject[] = [
-  { path: 'users', element: <UsersSection /> },
-  { path: 'roles', element: <RolesSection /> },
-  { path: 'organization', element: <OrganizationSection /> },
+  { path: 'appearance', element: <AppearanceSection /> },
+  { path: 'accessibility', element: <AccessibilitySection /> },
   { path: 'notifications', element: <NotificationsSection /> },
-  { path: 'ai', element: <AiSection /> },
+  { path: 'experience', element: <UserExperienceSection /> },
+  { path: 'language', element: <LanguageRegionSection /> },
+  { path: 'account', element: <AccountSection /> },
   { path: 'security', element: <SecuritySection /> },
-  { path: 'data', element: <DataSection /> },
-  { path: 'audit', element: <AuditSection /> },
+  { path: 'about', element: <AboutSection /> },
+]
+
+export const settingsNav = [
+  { to: 'appearance', label: 'Apariencia', icon: Monitor },
+  { to: 'accessibility', label: 'Accesibilidad', icon: Accessibility },
+  { to: 'notifications', label: 'Notificaciones', icon: Bell },
+  { to: 'experience', label: 'Experiencia', icon: Sparkles },
+  { to: 'language', label: 'Idioma y región', icon: Globe },
+  { to: 'account', label: 'Cuenta', icon: User },
+  { to: 'security', label: 'Seguridad', icon: Shield },
+  { to: 'about', label: 'Acerca de', icon: Info },
 ]

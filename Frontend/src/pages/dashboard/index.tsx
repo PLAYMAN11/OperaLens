@@ -1,88 +1,46 @@
-import { FileText, LineChart, PlayCircle, Upload } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
-import { Card, CardHeader } from '@/components/ui/card'
-import { PageLoader } from '@/components/shared/PageLoader'
-import { AiSummaryBanner } from '@/components/widgets/AiSummaryBanner'
-import { KpiCard } from '@/components/widgets/KpiCard'
-import { AiRecommendationsCard } from '@/components/widgets/AiRecommendationsCard'
-import { RealTimeActivityFeed } from '@/components/widgets/RealTimeActivityFeed'
-import { RecentAlertsCard } from '@/components/widgets/RecentAlertsCard'
-import { QuickActionsBar } from '@/components/widgets/QuickActionsBar'
-import { OperationalPerformanceChart } from '@/components/charts/OperationalPerformanceChart'
+import { HomeExecutiveSummary } from '@/components/home/HomeExecutiveSummary'
+import { BehaviorPatternPanel } from '@/components/home/BehaviorPatternPanel'
+import { HomeAlertPanel } from '@/components/home/HomeAlertPanel'
+import { HomeQuickActions } from '@/components/home/HomeQuickActions'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useDashboardData } from '@/hooks/useDashboardData'
-import { useUserStore } from '@/stores/userStore'
 
-function getGreeting() {
-  const hour = new Date().getHours()
-  if (hour < 12) return 'Buenos días'
-  if (hour < 19) return 'Buenas tardes'
-  return 'Buenas noches'
+function HomePageLoader() {
+  return (
+    <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden">
+      <Skeleton className="h-[88px] shrink-0 rounded-2xl" />
+      <div className="grid min-h-0 flex-1 grid-cols-12 gap-3">
+        <Skeleton className="col-span-8 rounded-2xl" />
+        <Skeleton className="col-span-4 rounded-2xl" />
+      </div>
+      <div className="grid shrink-0 grid-cols-4 gap-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 rounded-2xl" />
+        ))}
+      </div>
+    </div>
+  )
 }
 
 export default function DashboardPage() {
   const { data, isLoading } = useDashboardData()
-  const nombre = useUserStore((s) => s.nombre)
-  const navigate = useNavigate()
 
-  if (isLoading || !data) return <PageLoader />
-
-  const quickActions = [
-    { id: 'qa1', label: 'Nuevo reporte', icon: FileText, onClick: () => navigate('/reports') },
-    { id: 'qa2', label: 'Cargar datos', icon: Upload, onClick: () => navigate('/integrations') },
-    { id: 'qa3', label: 'Simular escenario', icon: PlayCircle, onClick: () => navigate('/analytics') },
-    { id: 'qa4', label: 'Ver analítica', icon: LineChart, onClick: () => navigate('/analytics') },
-  ]
+  if (isLoading || !data) return <HomePageLoader />
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-extrabold tracking-tight text-zinc-900">
-        {getGreeting()}, {nombre.split(' ')[0]} 👋
-      </h1>
+    <div className="flex h-full min-h-0 flex-col gap-3 overflow-hidden">
+      <HomeExecutiveSummary summary={data.summary} />
 
-      <AiSummaryBanner>
-        {data.summary.highlights.map((part, i) =>
-          part.bold ? <strong key={i}>{part.text}</strong> : <span key={i}>{part.text}</span>,
-        )}
-      </AiSummaryBanner>
-
-      {/* KPIs */}
-      <div className="grid grid-cols-2 gap-6 xl:grid-cols-4">
-        {data.kpis.map((kpi) => (
-          <KpiCard key={kpi.id} kpi={kpi} />
-        ))}
-      </div>
-
-      {/* Rendimiento + Actividad */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <Card className="xl:col-span-2">
-          <CardHeader
-            title="Rendimiento Operacional"
-            subtitle="Métricas de eficiencia en tiempo real de las últimas 24 horas"
-            actions={
-              <div className="flex items-center gap-4 text-xs font-medium text-zinc-500">
-                <span className="flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-full bg-primary" /> Eficiencia
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-full bg-secondary" /> Procesos
-                </span>
-              </div>
-            }
-          />
-          <OperationalPerformanceChart data={data.performance} />
-        </Card>
-        <RealTimeActivityFeed events={data.activity} />
-      </div>
-
-      {/* Recomendaciones IA + Alertas */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-        <div className="xl:col-span-2">
-          <AiRecommendationsCard recommendations={data.recommendations} />
+      <div className="grid min-h-0 flex-1 grid-cols-12 gap-3 overflow-hidden">
+        <div className="col-span-12 min-h-0 lg:col-span-8">
+          <BehaviorPatternPanel insights={data.behaviorInsights} />
         </div>
-        <RecentAlertsCard alerts={data.alerts} />
+        <div className="col-span-12 min-h-0 lg:col-span-4">
+          <HomeAlertPanel alerts={data.alerts} />
+        </div>
       </div>
 
-      <QuickActionsBar actions={quickActions} />
+      <HomeQuickActions />
     </div>
   )
 }
