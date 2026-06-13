@@ -1,10 +1,11 @@
-# api.py — Oliver + Emmanuel (integración)
+# api.py — Oliver + Emmanuel + Jaime (integración)
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from services.parser import parse_excel
 from services.normalizer import normalizar
 from services import analyzer, anomalies, history
+from ai import explainer
 
 router = APIRouter()
 
@@ -24,6 +25,9 @@ async def upload_excel(file: UploadFile = File(...)):
     df_historico = history.obtener_movimientos_historicos()
     alertas = anomalies.detectar(resultado, df_historico)
 
+    # --- Capa 3: explicación en lenguaje natural ---
+    explicacion = explainer.explicar(resultado, alertas)
+
     # --- Persistencia ---
     analisis_id = history.guardar_analisis(resultado, alertas)
     history.guardar_movimientos(df)
@@ -38,6 +42,7 @@ async def upload_excel(file: UploadFile = File(...)):
         "consumo": resultado["consumo"],
         "resumen_etapas": resultado["resumen_etapas"],
         "anomalias": alertas,
+        "explicacion": explicacion,
     }
 
 
