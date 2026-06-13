@@ -28,10 +28,11 @@ OLLAMA_MODEL = "mistral"
 TIMEOUT = 60
 
 
-def explicar(resultado: dict[str, Any], anomalias: list[dict]) -> str:
+def explicar(resultado: dict[str, Any], anomalias: list[dict]) -> dict[str, str]:
     """
-    Punto de entrada. Devuelve un párrafo en español con los hallazgos
-    principales, listo para mostrar en el dashboard.
+    Punto de entrada. Devuelve un dict con:
+      - texto:   párrafo en español listo para el dashboard
+      - fuente:  motor que respondió ('bedrock' | 'ollama' | 'fallback')
     """
     prompt = _construir_prompt(resultado, anomalias)
 
@@ -39,25 +40,25 @@ def explicar(resultado: dict[str, Any], anomalias: list[dict]) -> str:
     bearer = os.getenv("AWS_BEARER_TOKEN_BEDROCK")
     if bearer:
         try:
-            return _llamar_bedrock_bearer(prompt, bearer)
+            return {"texto": _llamar_bedrock_bearer(prompt, bearer), "fuente": "bedrock"}
         except Exception:
             pass
 
     # 2. Bedrock con credenciales IAM
     if os.getenv("AWS_ACCESS_KEY_ID") and os.getenv("AWS_SECRET_ACCESS_KEY"):
         try:
-            return _llamar_bedrock_boto3(prompt)
+            return {"texto": _llamar_bedrock_boto3(prompt), "fuente": "bedrock"}
         except Exception:
             pass
 
     # 3. Ollama local
     try:
-        return _llamar_ollama(prompt)
+        return {"texto": _llamar_ollama(prompt), "fuente": "ollama"}
     except Exception:
         pass
 
     # 4. Sin IA
-    return _resumen_fallback(resultado, anomalias)
+    return {"texto": _resumen_fallback(resultado, anomalias), "fuente": "fallback"}
 
 
 # ---------------------------------------------------------------------------
